@@ -23,6 +23,7 @@ struct Shape {
 	float speed[3] = { 0.0f ,0.0f ,0.0f };
 	float color[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	float center[3] = { 0.f, 0.f, 0.f };
+	glm::vec3 scale = { 1.f, 1.f, 1.f };
 	objMatrices matrices;
 	float d = 0.f;
 	float d2 = 0.f;

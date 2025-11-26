@@ -65,7 +65,7 @@ void ShapeFactory::setRenderer(OpenGLRenderer* rend) {
 
 void ShapeFactory::InitPrototypes()
 {
-	Prototypes.push_back(CreateCube(0.f, 0.f, 0.f, 1.f));
+	Prototypes.push_back(CreateCube(0.f, 0.f, 0.f, 2.f));
 	Prototypes.push_back(CreateSphere(0.f, 0.f, 0.f, 1.f));
 	Prototypes.push_back(CreateCylinder(0.f, 0.f, 0.f, 1.f, 1.f));
 	Prototypes.push_back(CreateRing(0.f, 0.f, 0.f, 1.0f, 0.3f));
@@ -147,9 +147,9 @@ void ShapeFactory::BindShape(const Shape& shape) {
 	renderer->BindShape(shape.shapeType);
 }
 
-Shape& ShapeFactory::CreateRandomShape(float x, float y, float z) {
+Shape& ShapeFactory::CreateRandomShape(float x, float y, float z, int maxSize) {
 	int shapeType = RandomInt(0, 3);
-	int shapeSize = RandomInt(1, 10);
+	int shapeSize = RandomInt(1, maxSize);
 	float r, g, b, vx, vy, vz;
 	r = RandomFloat(0.0f, 1.0f);
 	g = RandomFloat(0.0f, 1.0f);
@@ -160,7 +160,6 @@ Shape& ShapeFactory::CreateRandomShape(float x, float y, float z) {
 
 	Shape& newShape = CreateShape(x, y, z, shapeSize, shapeType);
 	
-	//std::cout << "Spawned new shape: " << shapeType << std::endl;
 	SetColor(newShape, r, g, b, 1.0f);
 	newShape.speed[0] = vx;
 	newShape.speed[1] = vy;
@@ -177,17 +176,17 @@ Shape& ShapeFactory::CreateShape(float x, float y, float z, int shapeSize, int S
 	switch (ShapeType)
 	{
 	case T_CUBE:
-		return CreateCube(x, y, z, static_cast<float>(shapeSize));
+		return CreateCube(x + shapeSize * .5f, y + shapeSize *.5f, z + shapeSize * .5f, static_cast<float>(shapeSize));
 	case T_SPHERE:
 		return CreateSphere(x + shapeSize / 2.0f, y + shapeSize / 2.0f, z + shapeSize / 2.0f, shapeSize / 2.0f);
 	case T_CYLINDER:
-		return CreateCylinder(x + shapeSize / 2.0f, y, z + shapeSize / 2.0f, shapeSize / 2.0f, static_cast<float>(shapeSize));
+		return CreateCylinder(x + shapeSize / 2.0f, y + shapeSize / 2.f, z + shapeSize / 2.0f, shapeSize / 2.0f, static_cast<float>(shapeSize));
 	
     case T_RING:
         float r = RandomFloat(0.0f, 1.0f);
 		float r1 = .5f* shapeSize;
 		float r2 = r1/(float)RandomInt(3, 10);
-		return CreateRing(r+5,2*r2+5, r1+5,r1,r2);
+		return CreateRing(x + r1, y + 2*r2, z + r1,r1,r2);
     }
 	return CreateCube(x, y, z, static_cast<float>(shapeSize));
 }
@@ -311,10 +310,13 @@ Shape& ShapeFactory::CreateRing(float x,float y, float z, float r1, float r2) {
 	model = glm::scale(model, glm::vec3{ r1, 4*r2, r1 });
 	Shape* tempShapePtr = new Shape{ Prototypes.at(T_RING) };
 	Shape& tempShape = *tempShapePtr;
+	tempShape.scale = glm::vec3{ r1, 4 * r2, r1 };
 	tempShape.matrices.model = model;
 	tempShape.center[0] = x;
 	tempShape.center[1] = y;
 	tempShape.center[2] = z;
+	tempShape.d = 2 * r1;
+	tempShape.d2 = r2;
 	return tempShape;
 }
 
@@ -349,10 +351,13 @@ float* ShapeFactory::CreateCircle(float x, float y, float z, float radius) {
 }
 
 Shape& ShapeFactory::CreateCube(float x0, float y0, float z0, float size) {
-	float x1 = x0 + size;
-	float y1 = y0 + size;
-	float z1 = z0 + size;
 	if (firstCube) {
+		x0 = x0 - size / 2.f;
+		y0 = y0 - size / 2.f;
+		z0 = z0 - size / 2.f;
+		float x1 = x0 + size;
+		float y1 = y0 + size;
+		float z1 = z0 + size;
 		float positions[] = {
 			x0, y0, z0,//00 back(0)0
 			x0, y1, z0,//01 back(0)1
@@ -386,13 +391,14 @@ Shape& ShapeFactory::CreateCube(float x0, float y0, float z0, float size) {
 	}
 	glm::mat4 model{ 1.f };
 	model = glm::translate(model, glm::vec3{ x0, y0, z0 });
-	model = glm::scale(model, glm::vec3{ size, size, size });
+	model = glm::scale(model, glm::vec3{ size * .5f, size * .5f, size * .5f });
 	Shape* tempShapePtr = new Shape{ Prototypes.at(T_CUBE) };
 	Shape& tempShape = *tempShapePtr;
+	tempShape.scale = glm::vec3{ size * .5f, size * .5f, size * .5f };
 	tempShape.matrices.model = model;
-	tempShape.center[0] = x0+size/2.f;
-	tempShape.center[1] = y0+size/2.f;
-	tempShape.center[2] = z0+size/2.f;
+	tempShape.center[0] = x0;
+	tempShape.center[1] = y0;
+	tempShape.center[2] = z0;
 	tempShape.d = size;
 	return tempShape;
 }
@@ -403,7 +409,6 @@ Shape& ShapeFactory::CreateSphere(float x0, float y0, float z0, float radius) {
 	float nx, ny, nz, lengthInv = 1.0f / radius;    // vertex normal
 	//float s, t;                                    // vertex texCoord
 	if (firstSphere) {
-		std::cout << x0 << ", " << y0 << ", " << z0 << "," << std::endl;
 		float sectorStep = 2 * PI / SPHERE_SECTOR_NUM;
 		float stackStep = PI / SPHERE_STACK_NUM;
 		float sectorAngle, stackAngle;
@@ -447,6 +452,7 @@ Shape& ShapeFactory::CreateSphere(float x0, float y0, float z0, float radius) {
 	model = glm::scale(model, glm::vec3{ radius, radius, radius });
 	Shape* tempShapePtr = new Shape{ Prototypes.at(T_SPHERE) };
 	Shape& tempShape = *tempShapePtr;
+	tempShape.scale = glm::vec3{ radius, radius, radius };
 	tempShape.matrices.model = model;
 	tempShape.center[0] = x0;
 	tempShape.center[1] = y0;
@@ -459,8 +465,8 @@ Shape& ShapeFactory::CreateCylinder(float x, float y, float z, float radius, flo
 	if (firstCylinder) {
 
 		float* circle1, * circle2;
-		circle1 = CreateCircle(x, y, z, radius);
-		circle2 = CreateCircle(x, (y + height), z, radius);
+		circle1 = CreateCircle(x, (y + height/2), z, radius);
+		circle2 = CreateCircle(x, (y - height/2), z, radius);
 		float cylinder_pos[216];
 		for (int i = 0; i < 108; i++) {
 			cylinder_pos[i] = circle1[i];
@@ -483,17 +489,18 @@ Shape& ShapeFactory::CreateCylinder(float x, float y, float z, float radius, flo
 			n += 1;
 		}
 		firstCylinder = false;
-		return CreateShapeObject(cylinder_pos, 216, T_CYLINDER, x, y + height / 2, z, 2 * radius);
+		return CreateShapeObject(cylinder_pos, 216, T_CYLINDER, x, y, z, 2 * radius);
 	}
 	glm::mat4 model{ 1.f };
-	model = glm::translate(model, glm::vec3{ x, y + height / 2.f, z });
-	model = glm::scale(model, glm::vec3{ radius, height/2.f, radius });
+	model = glm::translate(model, glm::vec3{ x, y, z });
+	model = glm::scale(model, glm::vec3{ radius, height, radius });
 	Shape prototype = Prototypes.at(T_CYLINDER);
 	Shape* tempShapePtr = new Shape{ prototype };
 	Shape& tempShape = *tempShapePtr;
+	tempShape.scale = glm::vec3{ radius, height , radius };
 	tempShape.matrices.model = model;
 	tempShape.center[0] = x;
-	tempShape.center[1] = y + height/2.f;
+	tempShape.center[1] = y;
 	tempShape.center[2] = z;
 	tempShape.d = 2*radius;
 
@@ -510,9 +517,11 @@ Shape& ShapeFactory::CreateShapeObject(float * element, int elementSize, int sha
 	}
 	Shape* tempShapePtr = new Shape();
 	Shape& tempShape = *tempShapePtr; // trick for heap allocation
+	tempShape.scale = glm::vec3{ 1.f, 1.f, 1.f };
 	tempShape.size = elementSize;
 	tempShape.shapeType = shapeType;
-	tempShape.matrices.model = glm::mat4(1.0f);
+	tempShape.matrices.model = glm::mat4{1.0f};
+	tempShape.matrices.normalModel = glm::mat4{ 1.f };
 	tempShape.speed[0] = 0.0f;
 	tempShape.speed[1] = 0.0f;
 	tempShape.speed[2] = 0.0f;

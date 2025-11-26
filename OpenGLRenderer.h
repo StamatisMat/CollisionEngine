@@ -6,6 +6,11 @@
 #include <vector>
 #include <map>
 #include <string>
+struct PersistentBuffer {
+	uint32_t bufferID;
+	void* mappedPtr;
+	uint64_t size;
+};
 class OpenGLRenderer : public Renderer
 {
 private:
@@ -19,6 +24,8 @@ private:
 	std::map<uint32_t, int> shapeVBOIDmap;
 	std::map<uint32_t, int> shapeIBOIDmap;
 	std::vector<uint32_t> textures;
+	GLbitfield ssboUsageFlags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+	std::map<uint32_t, PersistentBuffer> typeToPersistentSSBOMap;
 	//std::vector<GLuint> framebuffers;
 public:
 	OpenGLRenderer();

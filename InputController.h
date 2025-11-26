@@ -9,8 +9,8 @@ private:
 	CameraController* camera;
 	DynamicShapeArray* shapeArray;
 	//speeds
-	float cameraSpeed = 20.0f / GLOBAL_SPEED;
-	float yawSpeed = 1.0f / GLOBAL_SPEED;
+	float cameraSpeed = 1000.0f / GLOBAL_SPEED;
+	float yawSpeed = 100.0f / GLOBAL_SPEED;
 
 	//flags
 	bool joystick_space = false;
@@ -24,5 +24,5 @@ private:
 public:
 	InputController(CameraController* camera, DynamicShapeArray* shapeArray);
 	//~InputController();
-	int parseInputs(GLFWwindow* window);
+	int parseInputs(GLFWwindow* window, float deltaTime);
 };

@@ -9,7 +9,7 @@ InputController::InputController(CameraController* camera, DynamicShapeArray* sh
 }
 
 
-int InputController::parseInputs(GLFWwindow* window) {
+int InputController::parseInputs(GLFWwindow* window, float deltaTime) {
 	int present = glfwJoystickPresent(GLFW_JOYSTICK_1);
 	present = 0; // glfwJoystickPresent seems to not work on W11, so we disable joystick input for now
 	if (1 == present) {
@@ -48,17 +48,17 @@ int InputController::parseInputs(GLFWwindow* window) {
 			camera->panX(axis[2] / 30);
 
 		if (buttons[11] == GLFW_PRESS)//right arrow
-			shapeArray->MoveSphere(1, glm::vec3(1.0f, 0.0f, 0.0f));
+			shapeArray->MoveSphere(1, glm::vec3(1.0f, 0.0f, 0.0f)*deltaTime);
 		if (buttons[13] == GLFW_PRESS)//left arrow
-			shapeArray->MoveSphere(1, glm::vec3(-1.0f, 0.0f, 0.0f));
+			shapeArray->MoveSphere(1, glm::vec3(-1.0f, 0.0f, 0.0f)*deltaTime);
 		if (buttons[10] == GLFW_PRESS)//up arrow
-			shapeArray->MoveSphere(1, glm::vec3(0.0f, 1.0f, 0.0f));
+			shapeArray->MoveSphere(1, glm::vec3(0.0f, 1.0f, 0.0f)*deltaTime);
 		if (buttons[12] == GLFW_PRESS)//down arrow
-			shapeArray->MoveSphere(1, glm::vec3(0.0f, -1.0f, 0.0f));
+			shapeArray->MoveSphere(1, glm::vec3(0.0f, -1.0f, 0.0f)*deltaTime);
 		if (buttons[4] == GLFW_PRESS)//L1 arrow
-			shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, 1.0f));
+			shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, 1.0f)*deltaTime);
 		if (buttons[5] == GLFW_PRESS)//R1 arrow
-			shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, -1.0f));
+			shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, -1.0f)*deltaTime);
 		if (buttons[6] == GLFW_PRESS)//Select
 			shapeArray->SpeedUP(false);
 		if (buttons[7] == GLFW_PRESS)//Start
@@ -103,41 +103,41 @@ int InputController::parseInputs(GLFWwindow* window) {
 
 	//move camera
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera->moveZ(cameraSpeed + 1);
+		camera->moveZ(cameraSpeed*deltaTime + deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera->moveZ(-cameraSpeed - 1);
+		camera->moveZ(-cameraSpeed*deltaTime - deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera->moveX(-cameraSpeed);
+		camera->moveX(-cameraSpeed*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera->moveX(cameraSpeed);
+		camera->moveX(cameraSpeed*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera->moveY(-cameraSpeed);
+		camera->moveY(-cameraSpeed*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
-		camera->moveY(cameraSpeed);
+		camera->moveY(cameraSpeed*deltaTime);
 
 	//camera controls
 	if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
-		camera->panY(-yawSpeed);
+		camera->panY(-yawSpeed*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS)
-		camera->panY(yawSpeed);
+		camera->panY(yawSpeed*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS)
-		camera->panX(-yawSpeed / 2);
+		camera->panX(-yawSpeed * .5f * deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-		camera->panX(yawSpeed / 2);
+		camera->panX(yawSpeed * .5f * deltaTime);
 
 	//Sphere Controls
 	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-		shapeArray->MoveSphere(1, glm::vec3(1.0f, 0.0f, 0.0f));
+		shapeArray->MoveSphere(1, glm::vec3(1.0f, 0.0f, 0.0f)*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-		shapeArray->MoveSphere(1, glm::vec3(-1.0f, 0.0f, 0.0f));
+		shapeArray->MoveSphere(1, glm::vec3(-1.0f, 0.0f, 0.0f)*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-		shapeArray->MoveSphere(1, glm::vec3(0.0f, 1.0f, 0.0f));
+		shapeArray->MoveSphere(1, glm::vec3(0.0f, 1.0f, 0.0f)*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-		shapeArray->MoveSphere(1, glm::vec3(0.0f, -1.0f, 0.0f));
+		shapeArray->MoveSphere(1, glm::vec3(0.0f, -1.0f, 0.0f)*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
-		shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, -1.0f));
+		shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, -1.0f)*deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
-		shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, 1.0f));
+		shapeArray->MoveSphere(1, glm::vec3(0.0f, 0.0f, 1.0f)*deltaTime);
 
 	//speed UP/DOWN
 	if ((glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)) {

@@ -6,7 +6,7 @@ This project was a 3D Object Collision Demo developed using OpenGL as part of a 
 This project has been overhauled to include a more modular architecture with an abstract Renderer class, allowing for easier integration of different rendering backends. The OpenGLRenderer implementation has been improved, and a SlangCompiler has been introduced to streamline shader management across multiple graphics APIs. The codebase has been modernized to utilize contemporary C++ features and OpenGL practices, enhancing performance and maintainability.
 
 New:
-This project is a 2D Object Collision Demo developed using OpenGL, showcasing real-time collision detection and response between objects in a 3D environment. The demo simulates basic physics principles such as velocity and acceleration, allowing objects to interact upon impact. It employs shaders for lighting and surface effects, enhancing the visual quality of the scene. The project utilizes collision detection algorithms, including bounding volumes, to manage interactions between objects effectively.
+This project is a 3D Object Collision Demo developed using OpenGL, showcasing real-time collision detection and response between objects in a 3D environment. The demo simulates basic physics principles such as velocity and acceleration, allowing objects to interact upon impact. It employs shaders for lighting and surface effects, enhancing the visual quality of the scene. The project utilizes collision detection algorithms, including bounding volumes, to manage interactions between objects effectively.
 ## Installation
 
 To run the **3D Object Collision Demo**, follow these steps:
@@ -86,7 +86,7 @@ Once you run the demo, the program will open in the 3D scene. You can move aroun
 DONE:
 
 	- Modernize current render process. Utilize batch rendering techniques. Figure out how to store data in SSBOs. \/
-		-- Implemented batch rendering for static and dynamic objects. Reduced draw calls significantly. It's sloooow but it works. Further optimizations needed.
+		-- Implemented batch rendering for static and dynamic objects. Reduced draw calls significantly. It's bonkers. Check \/
 	- Abstract Renderer class
 		-- OpenGLRenderer implements Renderer
 	- SlangCompiler

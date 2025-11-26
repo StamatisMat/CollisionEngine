@@ -141,14 +141,16 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLEW_STATIC;SLANG_STATIC</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;SLANG_STATIC;NDEBUG</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)Dependencies\Code;$(SolutionDir)Dependencies\Code\slang</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -182,6 +184,8 @@
     <ClInclude Include="ApplicationController.h" />
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="DynamicShapeArray.h" />
+    <ClInclude Include="ErrorCodes.h" />
+    <ClInclude Include="OpenGLProfiler.h" />
     <ClInclude Include="InputController.h" />
     <ClInclude Include="opengl.h" />
     <ClInclude Include="OpenGLRenderer.h" />
@@ -190,6 +194,7 @@
     <ClInclude Include="ShaderCompiler.h" />
     <ClInclude Include="Shape.h" />
     <ClInclude Include="ShapeFactory.h" />
+    <ClInclude Include="SpatialGrid.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="batch_common.slang" />

@@ -1,7 +1,8 @@
 #pragma once
 #include "ShapeFactory.h"
+#include "SpatialGrid.h"
 
-#define GLOBAL_SPEED 60
+#define GLOBAL_SPEED 30
 #define MAX_SPEEDUP 100
 
 extern bool soundsEnabled;
@@ -21,10 +22,17 @@ public:
 	//Binds VAO and ib of the shape at the index
 	void BindShape(int index);
 
-	//movement
+	// Updater (If this project gets bigger(very funny), split into IntegrateMotion, UpdatePhysics, UpdateMatrices).
+	void UpdatePhysics(float deltaTime);
+	void UpdateMatrices(const glm::mat4& view, const glm::mat4& projection);
+
+	[[deprecated("Use UpdatePhysics() instead")]]
 	void Move(int index);
+	[[deprecated("Use UpdatePhysics() instead")]]
 	void Move(int index, glm::mat4 view, glm::mat4& projection);
+	[[deprecated("Use UpdatePhysics() instead")]]
 	void MoveAll();
+	[[deprecated("Use UpdatePhysics() + UpdateMatrices() instead")]]
 	void MoveAll(glm::mat4 view, glm::mat4& projection);
 	void MoveSphere(int index, glm::vec3 speed);
 	void SpeedUP(bool up);
@@ -47,13 +55,17 @@ public:
 
 private:
 	std::vector<Shape *> shapeArray;
-	//std::array<std::vector<std::reference_wrapper<Shape>>, 4> shapeTypeArray; // for batch rendering 
 	std::array<std::vector<Shape*>, 4> shapeTypeArray; // for batch rendering 
 	ShapeFactory* shapeFactory;
 	uint32_t size;
 	uint32_t capacity;
 	
 	//collision handling
+	SpatialGrid m_SpatialGrid{ 10.0f }; // cell size of 20 units
+	std::vector<int> m_nearbyCache;
+	void CheckAllCollisions();
+	void CheckCollisionPair(int i, int j);
+	[[deprecated("Use CheckCollisionPair() instead")]]
 	void CheckCollision(int index);
 	void Collide(int index1, int index2);
 	

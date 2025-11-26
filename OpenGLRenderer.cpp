@@ -22,7 +22,10 @@ OpenGLRenderer::~OpenGLRenderer() {
 		glDeleteTextures(1, &tex);
 	}
 	for (std::pair<uint32_t, uint32_t> handle: typeToSSBOMap) {
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle.second);
+		glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 		glDeleteBuffers(1, &handle.second);
+		glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	}
 	for (std::pair<uint32_t, uint32_t> handle : typeToUBOMap) {
 		glDeleteBuffers(1, &handle.second);
@@ -110,6 +113,7 @@ int16_t OpenGLRenderer::init(uint16_t windowWidth, uint16_t windowHeight) {
 	int flags;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	glfwSwapInterval(0);
 #ifdef _DEBUG
 	std::cout << "Debug context enabled" << std::endl;
 	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
@@ -157,11 +161,18 @@ void OpenGLRenderer::createSSBO(uint32_t binding, uint16_t type, uint32_t size) 
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
 	// We don't need to use glBufferSubData, so dynamic bit is off. Important for performance.
 	// I'll just use mapping.
-	glBufferStorage(GL_SHADER_STORAGE_BUFFER, size, NULL, GL_MAP_WRITE_BIT); // TODO: parameterize usage flags
+	glBufferStorage(GL_SHADER_STORAGE_BUFFER, size, NULL, ssboUsageFlags); // TODO: parameterize usage flags
 	glBindBufferRange(GL_SHADER_STORAGE_BUFFER, binding, ssbo, 0, size);
+	void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, size, ssboUsageFlags);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 	typeToSSBOMap[type] = ssbo;
 	typeToSSBOSize[type] = size;
+	for (uint16_t i = 1; ptr == nullptr ; ++i) {
+		if (0 == i) throw std::runtime_error("GPU data upload failed. glMapBufferRange returned null pointer.");
+		ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, typeToSSBOSize[type], ssboUsageFlags | GL_MAP_INVALIDATE_BUFFER_BIT);
+	}
+	PersistentBuffer persistentBuffer{ssbo, ptr, size};
+	typeToPersistentSSBOMap[type] = persistentBuffer;
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
@@ -169,31 +180,30 @@ void OpenGLRenderer::resizeSSBO(uint16_t type, uint32_t newSize) {
 	GLuint ssbo;
 	glGenBuffers(1, &ssbo);
 	glBindBuffer(GL_COPY_WRITE_BUFFER, ssbo);
-	glBufferStorage(GL_COPY_WRITE_BUFFER, newSize, NULL, GL_MAP_WRITE_BIT);
+	glBufferStorage(GL_COPY_WRITE_BUFFER, newSize, NULL, ssboUsageFlags);
 	glBindBuffer(GL_COPY_READ_BUFFER, typeToSSBOMap[type]);
 	glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, std::min(newSize, typeToSSBOSize[type]));
 	glBindBuffer(GL_COPY_WRITE_BUFFER, 0); // should be correct, but it generates error 1280
 	glBindBuffer(GL_COPY_READ_BUFFER, 0);
 	typeToSSBOSize[type] = newSize;
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, typeToSSBOMap[type]);
+	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 	glDeleteBuffers(1, &typeToSSBOMap[type]);
 	typeToSSBOMap[type] = ssbo;
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+	void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, newSize, ssboUsageFlags);
+	for (uint16_t i = 1; ptr == nullptr; ++i) {
+		if (0 == i) throw std::runtime_error("GPU data upload failed. glMapBufferRange returned null pointer.");
+		ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, newSize, ssboUsageFlags | GL_MAP_INVALIDATE_BUFFER_BIT);
+	}
+	typeToPersistentSSBOMap[type] = PersistentBuffer{ ssbo, ptr, newSize };
 }
 
 void *OpenGLRenderer::getMappedSSBOData(uint16_t type, uint32_t maxSize) {
-	uint16_t i = 1;
 	if (maxSize > typeToSSBOSize[type]) {
 		resizeSSBO(type, maxSize);
 	}
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, typeToSSBOMap[type]);
-	void* ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, typeToSSBOSize[type], GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-
-	while (ptr == nullptr) {
-		if (0 == i) throw std::runtime_error("GPU data upload failed. glMapBufferRange returned null pointer.");
-		ptr = glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, typeToSSBOSize[type], GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
-		++i;
-	}
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-	return ptr;
+	return typeToPersistentSSBOMap[type].mappedPtr;
 }
 
 void OpenGLRenderer::unmapSSBO(uint16_t type) {

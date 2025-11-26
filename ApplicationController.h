@@ -3,6 +3,7 @@
 #include "GLSLShader.h"
 #include "Renderer.h"
 #include "OpenGLRenderer.h"
+#include "ErrorCodes.h"
 
 #ifdef _WIN32
 #include <Windows.h>
